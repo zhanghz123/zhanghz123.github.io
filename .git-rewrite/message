@@ -1,0 +1,8 @@
+房地产成本管理改为PDF在线查看
+
+- 将xmind文件链接改为PDF文件
+- 添加PDF模态框功能，在网页中直接查看PDF
+- 禁止右键菜单和拖拽，增加下载难度
+- 添加"内容仅供在线浏览"提示
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>

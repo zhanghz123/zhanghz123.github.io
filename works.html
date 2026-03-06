@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>践行收获 | 张老成</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .works-hero {
+            padding: calc(70px + var(--spacing-xl)) 0 var(--spacing-xl);
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            text-align: center;
+        }
+
+        .works-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .works-hero .subtitle {
+            font-size: 1.125rem;
+            color: var(--color-secondary);
+        }
+
+        .works-section {
+            padding: var(--spacing-xl) 0;
+        }
+
+        .works-section:nth-child(even) {
+            background: var(--color-light);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .section-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .section-icon.cost { background: #e8f5e9; }
+        .section-icon.low { background: var(--color-low-bg); }
+        .section-icon.biz { background: var(--color-biz-bg); }
+        .section-icon.ai { background: var(--color-ai-bg); }
+
+        /* 筛选器样式 */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            background: var(--color-white);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--color-border);
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            background: var(--color-light);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: var(--color-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            background: var(--color-accent);
+            color: var(--color-white);
+            border-color: var(--color-accent);
+        }
+
+        .filter-btn.active {
+            background: var(--color-accent);
+            color: var(--color-white);
+            border-color: var(--color-accent);
+        }
+
+        /* 项目标签 */
+        .work-card {
+            background: var(--color-white);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .work-card[data-category] {
+            position: relative;
+        }
+
+        .work-card.hidden {
+            display: none;
+        }
+
+        /* 视图切换按钮 */
+        .view-toggle {
+            display: flex;
+            gap: var(--spacing-xs);
+            margin-left: auto;
+        }
+
+        .view-btn {
+            padding: 0.5rem 0.75rem;
+            background: var(--color-light);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: var(--color-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .view-btn.active {
+            background: var(--color-accent);
+            color: var(--color-white);
+            border-color: var(--color-accent);
+        }
+
+        /* 列表视图样式 */
+        .works-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+
+        .works-grid.list-view .work-card {
+            display: grid;
+            grid-template-columns: 80px 1fr auto;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            align-items: center;
+        }
+
+        .works-grid.list-view .work-preview {
+            height: 60px;
+            width: 60px;
+            font-size: 1.5rem;
+        }
+
+        .works-grid.list-view .work-preview img {
+            height: 60px;
+            width: 60px;
+        }
+
+        .works-grid.list-view .file-list {
+            flex-direction: row;
+            flex-wrap: wrap;
+            margin-top: var(--spacing-xs);
+        }
+
+        @media (max-width: 768px) {
+            .works-grid.list-view .work-card {
+                grid-template-columns: 1fr;
+                gap: var(--spacing-sm);
+            }
+
+            .works-grid.list-view .work-preview {
+                height: 100px;
+                width: 100%;
+                font-size: 2rem;
+            }
+        }
+
+        .section-header-text h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .section-header-text p {
+            font-size: 0.9375rem;
+            color: var(--color-secondary);
+        }
+
+        .works-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-lg);
+        }
+
+        .work-card {
+            background: var(--color-white);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .work-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .work-preview {
+            height: 160px;
+            background: var(--color-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            position: relative;
+        }
+
+        .work-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .work-type {
+            position: absolute;
+            top: var(--spacing-sm);
+            right: var(--spacing-sm);
+            padding: 0.25rem 0.75rem;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--color-white);
+            font-size: 0.75rem;
+            border-radius: var(--radius-md);
+        }
+
+        .work-content {
+            padding: var(--spacing-lg);
+        }
+
+        .work-content h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+            color: var(--color-primary);
+        }
+
+        .work-content p {
+            font-size: 0.875rem;
+            color: var(--color-secondary);
+            line-height: 1.6;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .work-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.5rem 1rem;
+            background: var(--color-accent);
+            color: var(--color-white);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .work-link:hover {
+            background: var(--color-accent-hover);
+        }
+
+        .work-link.pdf-view-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* PDF查看器样式 */
+        .pdf-viewer {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .pdf-hint {
+            text-align: center;
+            color: var(--color-muted);
+            font-size: 0.75rem;
+            margin-top: var(--spacing-xs);
+        }
+
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            background: var(--color-light);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .file-item:hover {
+            background: var(--color-accent);
+            color: var(--color-white);
+        }
+
+        .file-icon {
+            font-size: 1.25rem;
+        }
+
+        .file-name {
+            flex: 1;
+            font-size: 0.875rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .certificate-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .certificate-card {
+            background: var(--color-white);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .certificate-card:hover {
+            border-color: var(--color-ai);
+            box-shadow: var(--shadow-md);
+        }
+
+        .certificate-img {
+            width: 100%;
+            height: 160px;
+            object-fit: contain;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-sm);
+            background: var(--color-light);
+        }
+
+        .certificate-card h4 {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--color-primary);
+        }
+
+        .certificate-card p {
+            font-size: 0.8125rem;
+            color: var(--color-secondary);
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .works-hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .works-grid,
+            .file-list {
+                grid-template-columns: 1fr;
+            }
+
+            .certificate-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="index.html">张老成</a>
+                <span class="nav-tag">跨界转型中</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="about.html">关于我</a></li>
+                <li><a href="works.html" class="active">践行收获</a></li>
+                <li><a href="thoughts.html">思考感悟</a></li>
+                <li><a href="contact.html">联系交流</a></li>
+            </ul>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 践行收获 Hero -->
+    <section class="works-hero">
+        <div class="container">
+            <h1>践行收获</h1>
+            <p class="subtitle">过往经验沉淀与现在探索实践</p>
+        </div>
+    </section>
+
+    <!-- 房地产成本管理 -->
+    <section id="cost" class="works-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-icon cost">🏗️</div>
+                <div class="section-header-text">
+                    <h2>房地产成本管理</h2>
+                    <p>23年专业经验总结，完整的成本管控体系</p>
+                </div>
+            </div>
+
+            <div class="works-grid">
+                <div class="work-card pdf-viewer" oncontextmenu="return false;">
+                    <div class="work-preview">📊</div>
+                    <div class="work-content">
+                        <h3>成本管理体系思考</h3>
+                        <p>完整的体系思考总结，后续丰富案例并形成文档</p>
+                        <a href="hub/成本管理/成本管理思考及总结/成本管理逻辑及体系思考_watermarked.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+
+                <div class="work-card pdf-viewer" oncontextmenu="return false;">
+                    <div class="work-preview">🔄</div>
+                    <div class="work-content">
+                        <h3>造价咨询AI转型方案</h3>
+                        <p>传统造价咨询行业AI转型策划</p>
+                        <a href="hub/成本管理/造价咨询AI转型方案/造价咨询AI转型方案-水印版.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+
+                <div class="work-card pdf-viewer" oncontextmenu="return false;">
+                    <div class="work-preview">🤖</div>
+                    <div class="work-content">
+                        <h3>房地产成本专业人工智能化策划</h3>
+                        <p>AI技术与成本管理结合的应用方案，需继续深化</p>
+                        <a href="hub/成本管理/房地产成本专业人工智能化策划/房地产成本专业人工智能化策划-水印版.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 低空经济 -->
+    <section id="low-altitude" class="works-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-icon low">🚁</div>
+                <div class="section-header-text">
+                    <h2>低空经济</h2>
+                    <p>行业实践探索、无人机应用方案</p>
+                </div>
+            </div>
+
+            <!-- 筛选器 -->
+            <div class="filter-bar" id="low-altitude-filter">
+                <button class="filter-btn active" data-filter="all">全部</button>
+                <button class="filter-btn" data-filter="company">实践总结</button>
+                <button class="filter-btn" data-filter="solution">技术文件</button>
+                <button class="filter-btn" data-filter="training">培训课件</button>
+                <button class="filter-btn" data-filter="project">项目方案</button>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid">📱 网格</button>
+                    <button class="view-btn" data-view="list">📋 列表</button>
+                </div>
+            </div>
+
+            <div class="works-grid" id="low-altitude-grid">
+                <div class="work-card pdf-viewer" data-category="company" oncontextmenu="return false;">
+                    <div class="work-preview">🏢</div>
+                    <div class="work-content">
+                        <h3>环天科技摸索思考与前行</h3>
+                        <p>2025年在环天科技的探索总结</p>
+                        <a href="hub/低空/2025环天的摸索思考与前行（终稿）.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+
+                <div class="work-card pdf-viewer" data-category="project" oncontextmenu="return false;">
+                    <div class="work-preview">📡</div>
+                    <div class="work-content">
+                        <h3>广电花都项目初步方案</h3>
+                        <p>花都区低空经济应用场景策划</p>
+                        <a href="hub/低空/广电花都项目初步方案.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+
+                <div class="work-card" data-category="project">
+                    <div class="work-preview">
+                        <img src="hub/低空/城市魔方方案/城市展厅效果图（定稿）.jpeg" alt="城市魔方">
+                        <div class="work-type">方案</div>
+                    </div>
+                    <div class="work-content">
+                        <h3>城市魔方方案</h3>
+                        <p>城市低空物流运营方案</p>
+                        <div class="file-list">
+                            <a href="hub/低空/城市魔方方案/城市低空物流运营图20250308-水印版.pdf" target="_blank" class="file-item">
+                                <span class="file-icon">📄</span>
+                                <span class="file-name">运营图</span>
+                            </a>
+                            <a href="hub/低空/城市魔方方案/城市展厅效果图（定稿）.jpeg" target="_blank" class="file-item">
+                                <span class="file-icon">🏢</span>
+                                <span class="file-name">效果图</span>
+                            </a>
+                            <a href="hub/低空/城市魔方方案/政策与构思-水印版.pdf" target="_blank" class="file-item">
+                                <span class="file-icon">📄</span>
+                                <span class="file-name">政策与构思</span>
+                            </a>
+                            <a href="hub/低空/城市魔方方案/城市展厅效果视频（可灵版）.mp4" target="_blank" class="file-item">
+                                <span class="file-icon">🎬</span>
+                                <span class="file-name">效果视频</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="work-card pdf-viewer" data-category="project" oncontextmenu="return false;">
+                    <div class="work-preview">🔍</div>
+                    <div class="work-content">
+                        <h3>无人机建筑外立面巡检方案</h3>
+                        <p>建筑外立面巡检技术方案</p>
+                        <a href="hub/低空/无人机建筑外立面巡检方案_v0(2).pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+
+                <div class="work-card pdf-viewer" data-category="project" oncontextmenu="return false;">
+                    <div class="work-preview">🧹</div>
+                    <div class="work-content">
+                        <h3>无人机高空清洗解决方案</h3>
+                        <p>建筑外墙清洗应用方案</p>
+                        <a href="hub/低空/无人机高空清洗解决方案.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+
+                <div class="work-card pdf-viewer" data-category="training" oncontextmenu="return false;">
+                    <div class="work-preview">📚</div>
+                    <div class="work-content">
+                        <h3>无人机执照培训课件</h3>
+                        <p>多旋翼无人机驾驶员培训课件</p>
+                        <a href="hub/低空/无人机执照培训电子课件（多旋翼类） - PDF-水印版.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+
+                <div class="work-card" data-category="training">
+                    <div class="work-preview">🎓</div>
+                    <div class="work-content">
+                        <h3>广大无人机培训开班挂牌策划</h3>
+                        <p>广大CAAC培训开班暨环天合作启动仪式</p>
+                        <div class="file-list">
+                            <a href="https://mp.weixin.qq.com/s/n0ae5wz5hLFRbh9rYbVdfg" target="_blank" class="file-item">
+                                <span class="file-icon">📰</span>
+                                <span class="file-name">活动回顾</span>
+                            </a>
+                            <a href="hub/低空/广大无人机培训仪式方案/广州大学无人机CAAC驾驶培训开班暨与环天合作仪式流程及人员车辆名单.pdf" target="_blank" class="file-item">
+                                <span class="file-icon">📋</span>
+                                <span class="file-name">流程安排</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="work-card pdf-viewer" data-category="project" oncontextmenu="return false;">
+                    <div class="work-preview">🏢</div>
+                    <div class="work-content">
+                        <h3>校企方案简介</h3>
+                        <p>培训合作方案介绍</p>
+                        <a href="hub/低空/广东环天科技简介-校企合作-1113-水印版.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+
+                <div class="work-card pdf-viewer" data-category="company" oncontextmenu="return false;">
+                    <div class="work-preview">📋</div>
+                    <div class="work-content">
+                        <h3>环天及低空安全合作项目框架</h3>
+                        <p>合作项目框架方案</p>
+                        <a href="hub/低空/环天科技及低空安全合作项目框架-水印版.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+
+                <div class="work-card" data-category="solution">
+                    <div class="work-preview">📁</div>
+                    <div class="work-content">
+                        <h3>高空清洗技术文件</h3>
+                        <p>技术方案及报价文件</p>
+                        <div class="file-list">
+                            <a href="hub/低空/高空清洗技术文件/广东省环天科技有限公司无人机幕墙清洗业务技术方案及报价（深圳市交通运输局宝安管理局项目）（第二版） - 副本-水印版.pdf" target="_blank" class="file-item">
+                                <span class="file-icon">📄</span>
+                                <span class="file-name">技术方案</span>
+                            </a>
+                            <a href="hub/低空/高空清洗技术文件/深圳外墙无人机清洗表格.pdf" target="_blank" class="file-item">
+                                <span class="file-icon">📊</span>
+                                <span class="file-name">清洗表格</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 商业策划 -->
+    <section id="business" class="works-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-icon biz">💼</div>
+                <div class="section-header-text">
+                    <h2>商业策划</h2>
+                    <p>研学基地、外摆空间、商业项目策划</p>
+                </div>
+            </div>
+
+            <div class="works-grid">
+                <div class="work-card pdf-viewer" oncontextmenu="return false;">
+                    <div class="work-preview">🎓</div>
+                    <div class="work-content">
+                        <h3>高校研学策划</h3>
+                        <p>高校学院研学活动策划方案</p>
+                        <a href="hub/商业/广东环天广大机械学院研学策划方案-水印版.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+
+                <div class="work-card pdf-viewer" oncontextmenu="return false;">
+                    <div class="work-preview">🏔️</div>
+                    <div class="work-content">
+                        <h3>西樵山石燕岩地质研学基地可行性报告</h3>
+                        <p>地质研学基地建设可行性分析</p>
+                        <a href="hub/商业/西樵山石燕岩地质研学基地可行性报告(环天提议)-水印版.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+
+                <div class="work-card pdf-viewer" oncontextmenu="return false;">
+                    <div class="work-preview">🏪</div>
+                    <div class="work-content">
+                        <h3>外摆空间招商方案</h3>
+                        <p>商业体外摆空间招商策划</p>
+                        <a href="hub/商业/邦华外摆空间招商方案 20250724-水印版.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+
+                <div class="work-card pdf-viewer" oncontextmenu="return false;">
+                    <div class="work-preview">📊</div>
+                    <div class="work-content">
+                        <h3>集市及摊位经营分析</h3>
+                        <p>集市经济和摊位经营系统分析</p>
+                        <a href="hub/商业/集市及摊位经营分析-水印版.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                        <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI学习 -->
+    <section id="ai" class="works-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-icon ai">🤖</div>
+                <div class="section-header-text">
+                    <h2>AI学习</h2>
+                    <p>策划方案、图文视频、Coze、N8N、Vibe Coding、多维表格、证书</p>
+                </div>
+            </div>
+
+            <!-- 策划方案 -->
+            <div class="ai-category">
+                <h3 class="ai-category-title">📋 策划方案</h3>
+                <div class="works-grid">
+                    <div class="work-card">
+                        <div class="work-preview">📊</div>
+                        <div class="work-content">
+                            <h3>AI技术产品化策划方案</h3>
+                            <p>AI技术在各行业的落地应用策划</p>
+                            <div class="file-list">
+                                <a href="hub/AI/AI策划/AI产品化策划方案-水印版.pdf" target="_blank" class="file-item">
+                                    <span class="file-icon">📄</span>
+                                    <span class="file-name">方案构思</span>
+                                </a>
+                                <a href="https://wcn19dn7pjwd.feishu.cn/wiki/GFK6wTMXMiv9bLkHEH2cJ65snob" target="_blank" class="file-item">
+                                    <span class="file-icon">📊</span>
+                                    <span class="file-name">产品文档</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="work-card pdf-viewer" oncontextmenu="return false;">
+                        <div class="work-preview">🔄</div>
+                        <div class="work-content">
+                            <h3>造价咨询AI转型方案</h3>
+                            <p>传统造价咨询行业AI转型</p>
+                            <a href="hub/AI/AI策划/造价咨询AI转型方案-水印版.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                            <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                        </div>
+                    </div>
+                    <div class="work-card pdf-viewer" oncontextmenu="return false;">
+                        <div class="work-preview">🏗️</div>
+                        <div class="work-content">
+                            <h3>房地产成本专业人工智能化策划</h3>
+                            <p>AI技术与房地产成本管理结合</p>
+                            <a href="hub/AI/AI策划/房地产成本专业人工智能化策划-水印版.pdf" target="_blank" class="work-link">📖 在线查看</a>
+                            <div class="pdf-hint">内容仅供在线浏览，请勿下载传播</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图文视频 -->
+            <div class="ai-category">
+                <h3 class="ai-category-title">🎬 图文视频</h3>
+                <div class="works-grid">
+                    <div class="work-card">
+                        <div class="work-preview">🎬</div>
+                        <div class="work-content">
+                            <h3>AI图文视频创作</h3>
+                            <p>《筑基》《试用期首富》AI短剧创作</p>
+                            <div class="file-list">
+                                <a href="hub/AI/AI图文视频/《筑基》第1话.mp4" target="_blank" class="file-item">
+                                    <span class="file-icon">🎥</span>
+                                    <span class="file-name">《筑基》</span>
+                                </a>
+                                <a href="hub/AI/AI图文视频/《试用期首富》（剪辑第二稿）.mp4" target="_blank" class="file-item">
+                                    <span class="file-icon">🎥</span>
+                                    <span class="file-name">《试用期首富》</span>
+                                </a>
+                                <a href="hub/AI/AI图文视频/无人机视频（练习版）.mp4" target="_blank" class="file-item">
+                                    <span class="file-icon">🚁</span>
+                                    <span class="file-name">无人机视频</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="work-card">
+                        <div class="work-preview">
+                            <img src="hub/AI/AI图文视频/培训角色设计/男一三视图.png" alt="角色设计">
+                            <div class="work-type">设计</div>
+                        </div>
+                        <div class="work-content">
+                            <h3>培训角色设计</h3>
+                            <p>AI培训课程角色全套设计</p>
+                            <a href="hub/AI/AI图文视频/培训角色设计/" target="_blank" class="work-link">查看全部 →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coze智能体 -->
+            <div class="ai-category">
+                <h3 class="ai-category-title">🤖 Coze智能体（待上传）</h3>
+                <div class="works-grid">
+                    <div class="work-card">
+                        <div class="work-preview">✍️</div>
+                        <div class="work-content">
+                            <h3>室内装修效果图生成</h3>
+                            <p>基于AI的室内装修效果图生成智能体</p>
+                            <div class="work-tags">
+                                <span class="work-tag">内容创作</span>
+                                <span class="work-tag">方案设计</span>
+                                <span class="work-tag">房地产</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="work-card">
+                        <div class="work-preview">🏗️</div>
+                        <div class="work-content">
+                            <h3>视频混剪工具</h3>
+                            <p>视频混剪生成至小红书及抖音智能体</p>
+                            <div class="work-tags">
+                                <span class="work-tag">内容创作</span>
+                                <span class="work-tag">图像处理</span>
+                                <span class="work-tag">多媒体</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- N8N工作流 -->
+            <div class="ai-category">
+                <h3 class="ai-category-title">⚙️ N8N工作流（待上传）</h3>
+                <div class="works-grid">
+                    <div class="work-card">
+                        <div class="work-preview">🔄</div>
+                        <div class="work-content">
+                            <h3>信息同步工作流</h3>
+                            <p>多平台信息自动同步与整理</p>
+                            <div class="work-tags">
+                                <span class="work-tag">自动化</span>
+                                <span class="work-tag">数据同步</span>
+                                <span class="work-tag">效率工具</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="work-card">
+                        <div class="work-preview">📤</div>
+                        <div class="work-content">
+                            <h3>内容分发工作流</h3>
+                            <p>一键分发内容到多个平台</p>
+                            <div class="work-tags">
+                                <span class="work-tag">内容运营</span>
+                                <span class="work-tag">社交媒体</span>
+                                <span class="work-tag">自动化</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vibe Coding -->
+            <div class="ai-category">
+                <h3 class="ai-category-title">💻 Vibe Coding</h3>
+                <div class="works-grid">
+                    <div class="work-card">
+                        <div class="work-preview">📝</div>
+                        <div class="work-content">
+                            <h3>文章改写及排版工具</h3>
+                            <p>基于AI的文章改写和自动排版工具</p>
+                            <a href="hub/AI/AI产品/文章改写及排版工具（第一版）.html" target="_blank" class="work-link">查看 →</a>
+                            <div class="work-tags">
+                                <span class="work-tag">AI应用开发</span>
+                                <span class="work-tag">HTML工具</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="work-card">
+                        <div class="work-preview">🚀</div>
+                        <div class="work-content">
+                            <h3>AI辅助编程实践</h3>
+                            <p>使用AI工具辅助开发应用的探索与实践</p>
+                            <div class="work-tags">
+                                <span class="work-tag">AI编程</span>
+                                <span class="work-tag">效率提升</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 多维表格 -->
+            <div class="ai-category">
+                <h3 class="ai-category-title">📊 多维表格应用（待上传）</h3>
+                <div class="works-grid">
+                    <div class="work-card">
+                        <div class="work-preview">📋</div>
+                        <div class="work-content">
+                            <h3>项目管理多维表格</h3>
+                            <p>使用飞书多维表格构建的项目管理系统</p>
+                            <div class="work-tags">
+                                <span class="work-tag">飞书</span>
+                                <span class="work-tag">项目管理</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="work-card">
+                        <div class="work-preview">📁</div>
+                        <div class="work-content">
+                            <h3>数据管理多维表格</h3>
+                            <p>结构化数据存储与管理的应用实践</p>
+                            <div class="work-tags">
+                                <span class="work-tag">数据管理</span>
+                                <span class="work-tag">飞书</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 证书 -->
+            <div class="ai-category">
+                <h3 class="ai-category-title">📜 证书</h3>
+                <div class="certificate-grid">
+                    <a href="hub/AI/AI证书/人工智能训练师（初级）-张海智-20250531.jpg" target="_blank" class="certificate-card">
+                        <img src="hub/AI/AI证书/人工智能训练师（初级）-张海智-20250531.jpg" alt="人工智能训练师（初级）证书" class="certificate-img">
+                        <h4>人工智能训练师（初级）</h4>
+                        <p>2025年5月</p>
+                    </a>
+                    <a href="hub/AI/AI证书/人工智能训练师（高级）-张海智-20250624.jpg" target="_blank" class="certificate-card">
+                        <img src="hub/AI/AI证书/人工智能训练师（高级）-张海智-20250624.jpg" alt="人工智能训练师（高级）证书" class="certificate-img">
+                        <h4>人工智能训练师（高级）</h4>
+                        <p>2025年6月</p>
+                    </a>
+                    <a href="hub/AI/AI证书/AI智能体训练营结业证书.jpg" target="_blank" class="certificate-card">
+                        <img src="hub/AI/AI证书/AI智能体训练营结业证书.jpg" alt="AI智能体训练营结业证书" class="certificate-img">
+                        <h4>AI智能体训练营</h4>
+                        <p>结业证书</p>
+                    </a>
+                    <div class="certificate-card">
+                        <img src="hub/AI/AI证书/placeholder.jpg" alt="多旋翼无人机中型超视距驾驶员CAAC认证" class="certificate-img" style="background: var(--color-light);">
+                        <div style="width: 100%; height: 160px; background: var(--color-light); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-direction: column; padding: var(--spacing-md);">
+                            <span style="font-size: 2rem;">🚁</span>
+                            <span style="font-size: 0.75rem; color: var(--color-muted); margin-top: var(--spacing-xs);">证书图片待添加</span>
+                        </div>
+                        <h4>多旋翼无人机中型超视距驾驶员CAAC认证</h4>
+                        <p>2026年6月</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI分类样式 -->
+    <style>
+        .ai-category {
+            margin-bottom: var(--spacing-xl);
+        }
+        .ai-category-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            color: var(--color-primary);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--color-border);
+        }
+        .work-tags {
+            display: flex;
+            gap: var(--spacing-xs);
+            flex-wrap: wrap;
+            margin-top: var(--spacing-sm);
+        }
+        .work-tag {
+            padding: 0.25rem 0.75rem;
+            background: var(--color-ai-bg);
+            color: var(--color-ai);
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+    </style>
+
+    <!-- 联系CTA -->
+    <section class="about-site">
+        <div class="container">
+            <div class="about-site-content">
+                <h2>对我的作品感兴趣？</h2>
+                <p>
+                    这些作品是我一年多来边学边做的成果，可能还不够成熟，
+                    但每一个都凝聚着我的思考和努力。
+                </p>
+                <p>
+                    如果你对某个方向感兴趣，或者想了解更多细节，
+                    欢迎与我交流！
+                </p>
+                <a href="contact.html" class="btn btn-primary">联系我</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h4>张老成</h4>
+                    <p>用行动诠释中年转型的可能性</p>
+                </div>
+                <div class="footer-nav">
+                    <a href="index.html">首页</a>
+                    <a href="about.html">关于我</a>
+                    <a href="works.html">践行收获</a>
+                    <a href="thoughts.html">思考感悟</a>
+                    <a href="contact.html">联系交流</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span class="current-year">2025</span> 张老成. 记录跨界转型之路</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        // 低空经济部分筛选和视图切换功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterBar = document.getElementById('low-altitude-filter');
+            const worksGrid = document.getElementById('low-altitude-grid');
+
+            if (filterBar && worksGrid) {
+                // 筛选功能
+                const filterBtns = filterBar.querySelectorAll('.filter-btn[data-filter]');
+                filterBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        // 更新按钮状态
+                        filterBtns.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+
+                        // 筛选项目
+                        const filter = this.getAttribute('data-filter');
+                        const workCards = worksGrid.querySelectorAll('.work-card');
+
+                        workCards.forEach(card => {
+                            if (filter === 'all') {
+                                card.classList.remove('hidden');
+                            } else {
+                                const category = card.getAttribute('data-category');
+                                if (category === filter) {
+                                    card.classList.remove('hidden');
+                                } else {
+                                    card.classList.add('hidden');
+                                }
+                            }
+                        });
+                    });
+                });
+
+                // 视图切换功能
+                const viewBtns = filterBar.querySelectorAll('.view-btn[data-view]');
+                viewBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        // 更新按钮状态
+                        viewBtns.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+
+                        // 切换视图
+                        const view = this.getAttribute('data-view');
+                        if (view === 'list') {
+                            worksGrid.classList.add('list-view');
+                        } else {
+                            worksGrid.classList.remove('list-view');
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+
+    <script>
+        // 禁止右键和拖拽（增加下载难度）
+        document.querySelectorAll('.pdf-viewer').forEach(card => {
+            card.addEventListener('contextmenu', e => e.preventDefault());
+            card.addEventListener('dragstart', e => e.preventDefault());
+        });
+    </script>
+</body>
+</html>

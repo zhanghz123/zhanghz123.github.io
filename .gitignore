@@ -1,0 +1,8 @@
+# PDF 备份文件
+*.pdf.bak
+*.pdf.bak2
+*.xlsx~
+# 临时文件
+*~
+*.swp
+*.tmp

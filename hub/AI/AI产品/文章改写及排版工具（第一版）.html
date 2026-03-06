@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown实时渲染工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        // 调用文章改写（卡兹克版）API
+        async function callKazikRewriteApi(content) {
+            const apiUrl = 'https://api.siliconflow.cn/v1/chat/completions';
+            const apiKey = 'sk-eszhlkfkcdsngxlhvoevczutbsiqtwqdpjrmeqgknatwaeyv';
+            
+            // 构建请求数据 - 严格按照用户提供的curl命令格式
+            const requestData = {
+                "thinking_budget": 4096,
+                "top_p": 0.7,
+                "model": "deepseek-ai/DeepSeek-V3.1",
+                "stream": true,
+                "max_tokens": 10000,
+                "messages": [
+                    {
+                        "content": "你是一位文章改写扩写大师，请将下面的文章草稿按要求改写扩写。改写扩写要求：# 吴晓波商业分析风格写作模版 # 对文章草稿内容可扩展但不能删减  ## 核心特征 - 数据驱动的叙述方式 - 历史维度的纵向对比 - 国际视野的横向比较 - 产业逻辑的深层剖析 - 商业本质的洞察  ## 文章结构  ### 1. 开篇钩子（Hook） - 用一个具体的数据或现象切入 - 设置悬念，引发思考 - 时间坐标定位  ### 2. 宏观背景（Context） - 政策环境分析 - 经济周期判断 - 行业格局变化 - 技术变革影响  ### 3. 数据支撑（Data） - 关键数据指标 - 增长曲线展示 - 市场份额变化 - 投入产出分析  ### 4. 案例剖析（Case） - 典型企业样本 - 商业模式解析 - 成功要素提炼 - 失败教训总结  ### 5. 趋势判断（Trend） - 发展周期预测 - 技术演进方向 - 市场机会识别 - 风险挑战预警  ### 6. 商业本质（Essence） - 价值创造逻辑 - 商业模型重构 - 竞争壁垒分析 - 盈利模式创新  ### 7. 结论建议（Conclusion） - 核心观点总结 - 行动策略建议 - 投资价值评估 - 未来展望  ## 语言风格 - 专业但不晦涩 - 数据化表达 - 历史纵深感 - 国际比较视野 - 商业洞察深度  ## 常用句式 - \"从数据上看...\" - \"如果我们把时间的指针拨回到...\" - \"对比国外成熟市场...\" - \"这背后反映了一个深刻的商业逻辑...\" - \"从历史周期来看...\" - \"这意味着什么？\" - \"商业的本质在于...\"。以下是文章草稿：{{文章草稿}}".replace('{{文章草稿}}', content),
+                        "role": "user"
+                    }
+                ]
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                }
+
+                // 开始流式读取
+                kazikRewriteStreaming = true;
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                document.getElementById('kazikRewriteContent').innerHTML = '';
+                document.getElementById('kazikRewriteContent').className = 'rewrite-content-area rewrite-streaming';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') {
+                                kazikRewriteStreaming = false;
+                                document.getElementById('kazikRewriteContent').className = 'rewrite-content-area';
+                                document.getElementById('kazikRewriteReplaceBtn').disabled = false;
+                                document.getElementById('kazikRewriteReplaceBtn').textContent = '替换内容';
+                                return;
+                            }
+
+                            try {
+                                const parsed = JSON.parse(data);
+                                const content = parsed.choices?.[0]?.delta?.content;
+                                if (content) {
+                                    kazikRewriteContent += content;
+                                    document.getElementById('kazikRewriteContent').textContent = kazikRewriteContent;
+                                    // 滚动到底部
+                                    document.getElementById('kazikRewriteContent').scrollTop = document.getElementById('kazikRewriteContent').scrollHeight;
+                                }
+                            } catch (e) {
+                                console.warn('解析数据失败:', e);
+                            }
+                        }
+                    }
+                }
+
+                kazikRewriteStreaming = false;
+                document.getElementById('kazikRewriteContent').className = 'rewrite-content-area';
+                document.getElementById('kazikRewriteReplaceBtn').disabled = false;
+                document.getElementById('kazikRewriteReplaceBtn').textContent = '替换内容';
+
+            } catch (error) {
+                console.error('卡兹克版AI API调用失败:', error);
+                document.getElementById('kazikRewriteError').style.display = 'block';
+                document.getElementById('kazikRewriteError').textContent = `AI服务调用失败: ${error.message}`;
+                document.getElementById('kazikRewriteContent').innerHTML = '<div class="rewrite-loading">AI服务连接失败</div>';
+                document.getElementById('kazikRewriteContent').className = 'rewrite-content-area';
+                kazikRewriteStreaming = false;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ddd;
+        }
+
+        .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background-color: #f8f9fa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+        }
+
+        .toolbar button {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .toolbar button:hover {
+            background-color: #f0f0f0;
+        }
+
+        .markdown-input {
+            flex: 1;
+            border: none;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            background-color: #fafafa;
+        }
+
+        .markdown-preview {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background-color: white;
+        }
+
+        .markdown-body {
+            max-width: none;
+            margin: 0;
+        }
+
+        .status-bar {
+            background-color: #f8f9fa;
+            padding: 8px 16px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-bar {
+            width: 60px;
+            height: 4px;
+            background-color: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-left: 8px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255,255,255,0.3),
+                transparent
+            );
+            animation: progress-shine 2s infinite;
+        }
+
+        @keyframes progress-shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .editor-stats {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .preview-stats {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stats-label {
+            font-weight: 500;
+            color: #495057;
+            min-width: 40px;
+        }
+
+        .resize-handle {
+            width: 4px;
+            background-color: #ddd;
+            cursor: col-resize;
+            position: relative;
+        }
+
+        .resize-handle:hover {
+            background-color: #999;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            text-align: center;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: #666;
+        }
+
+        .empty-state p {
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .sample-button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .sample-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* 代码块样式优化 */
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+            border: 1px solid #e1e4e8;
+        }
+
+        .markdown-body code {
+            background-color: #f3f4f6;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 85%;
+            color: #e83e8c;
+        }
+
+        .markdown-body pre code {
+            background-color: transparent;
+            padding: 0;
+            color: inherit;
+        }
+
+        /* 表格样式优化 */
+        .markdown-body table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+        }
+
+        .markdown-body table th,
+        .markdown-body table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .markdown-body table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        /* AI排版弹窗样式 */
+        .ai-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .ai-modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .ai-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .ai-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .ai-close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ai-close-btn:hover {
+            color: #333;
+        }
+
+        .ai-content-area {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 20px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .ai-loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .ai-error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .ai-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .ai-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .ai-btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .ai-btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .ai-btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .ai-btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .ai-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* 流式输出动画 */
+        .ai-streaming::after {
+            content: '...';
+            animation: streaming-dots 1.5s infinite;
+        }
+
+        @keyframes streaming-dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* 文章草稿改写弹窗样式 */
+        .rewrite-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .rewrite-modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        .rewrite-modal-header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rewrite-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .rewrite-modal-title::before {
+            content: "✍️";
+            margin-right: 8px;
+            font-size: 20px;
+        }
+
+        .rewrite-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .rewrite-close-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .rewrite-content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border-radius: 0 0 12px 12px;
+            min-height: 300px;
+        }
+
+        .rewrite-loading {
+            color: #6c757d;
+            font-style: italic;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .rewrite-streaming::after {
+            content: '';
+            animation: streaming-dots 1.5s infinite;
+        }
+
+        .rewrite-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 10px 20px;
+            border: 1px solid #f5c6cb;
+            display: none;
+        }
+
+        .rewrite-modal-footer {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .rewrite-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .rewrite-btn-primary {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .rewrite-btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .rewrite-btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .rewrite-btn-secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-1px);
+        }
+
+        .rewrite-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 微信公众号美化样式 */
+        .markdown-body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #3f3f3f;
+            padding: 20px;
+        }
+
+        /* 加粗文字样式 - 蓝色 */
+        .markdown-body strong,
+        .markdown-body b {
+            color: #0052ff;
+            font-weight: 600;
+        }
+
+        /* 一级标题样式 - 大序号 + 卡片背景 */
+        .markdown-body h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 40px 0 24px 0;
+            padding: 16px 20px;
+            background-color: #3f3f3f;
+            color: white;
+            border-radius: 12px;
+            position: relative;
+            counter-increment: h1-counter;
+        }
+
+        /* 一级标题前的大序号 */
+        .markdown-body h1::before {
+            content: counter(h1-counter, decimal-leading-zero);
+            font-size: 32px;
+            font-weight: 700;
+            margin-right: 12px;
+            color: #ffffff;
+        }
+
+        /* 重置和设置计数器 */
+        .markdown-body {
+            counter-reset: h1-counter;
+        }
+
+        /* 其他标题保持原有样式但优化 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 32px 0 20px 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 8px;
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 24px 0 16px 0;
+            color: #34495e;
+        }
+
+        /* 段落优化 */
+        .markdown-body p {
+            margin: 16px 0;
+            text-align: justify;
+            text-justify: inter-ideograph;
+        }
+
+        /* 列表优化 */
+        .markdown-body ul,
+        .markdown-body ol {
+            margin: 16px 0;
+            padding-left: 28px;
+        }
+
+        .markdown-body li {
+            margin: 8px 0;
+            line-height: 1.7;
+        }
+
+        /* 引用块样式优化 */
+        .markdown-body blockquote {
+            background-color: #f8f9fa;
+            border-left: 4px solid #0052ff;
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            color: #495057;
+            font-style: italic;
+        }
+
+        /* 链接样式优化 */
+        .markdown-body a {
+            color: #0052ff;
+            text-decoration: none;
+            border-bottom: 1px solid #0052ff;
+            transition: all 0.3s ease;
+        }
+
+        .markdown-body a:hover {
+            background-color: #f0f7ff;
+            border-bottom: 2px solid #0052ff;
+        }
+
+        /* 行内代码样式优化 */
+        .markdown-body code {
+            background-color: #f1f3f4;
+            color: #d63384;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 85%;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .editor-panel {
+                border-right: none;
+                border-bottom: 1px solid #ddd;
+            }
+            
+            .resize-handle {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="editor-panel">
+            <div class="panel-header">
+                <span>📝 Markdown 编辑器</span>
+                <div class="toolbar">
+                    <button onclick="aiRewriteKazik()" style="background-color: #dc3545; color: white; border-color: #dc3545;">草稿改写（卡兹克版）</button>
+                    <button onclick="aiRewrite()" style="background-color: #28a745; color: white; border-color: #28a745;">草稿改写（吴晓波版）</button>
+                    <button onclick="aiFormat()" style="background-color: #007bff; color: white; border-color: #007bff;">AI排版</button>
+                    <button onclick="clearEditor()">清空</button>
+                    <button onclick="loadSample()">示例</button>
+                    <button onclick="downloadMarkdown()">下载</button>
+                </div>
+
+    <!-- 文章草稿改写弹窗 -->
+    <div id="rewriteModal" class="rewrite-modal">
+        <div class="rewrite-modal-content">
+            <div class="rewrite-modal-header">
+                <span class="rewrite-modal-title">✍️ AI文章改写</span>
+                <button class="rewrite-close-btn" onclick="closeRewriteModal()">&times;</button>
+            </div>
+            <div id="rewriteError" class="rewrite-error" style="display: none;"></div>
+            <div id="rewriteContent" class="rewrite-content-area">
+                <div class="rewrite-loading rewrite-streaming">正在等待AI响应</div>
+            </div>
+            <div class="rewrite-modal-footer">
+                <button id="rewriteCancelBtn" class="rewrite-btn rewrite-btn-secondary" onclick="closeRewriteModal()">取消</button>
+                <button id="rewriteReplaceBtn" class="rewrite-btn rewrite-btn-primary" onclick="replaceWithRewriteContent()" disabled>替换内容</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 文章草稿改写（卡兹克版）弹窗 -->
+    <div id="kazikRewriteModal" class="rewrite-modal">
+        <div class="rewrite-modal-content">
+            <div class="rewrite-modal-header">
+                <span class="rewrite-modal-title">🔥 卡兹克版AI改写</span>
+                <button class="rewrite-close-btn" onclick="closeKazikRewriteModal()">&times;</button>
+            </div>
+            <div id="kazikRewriteError" class="rewrite-error" style="display: none;"></div>
+            <div id="kazikRewriteContent" class="rewrite-content-area">
+                <div class="rewrite-loading rewrite-streaming">正在等待AI响应</div>
+            </div>
+            <div class="rewrite-modal-footer">
+                <button id="kazikRewriteCancelBtn" class="rewrite-btn rewrite-btn-secondary" onclick="closeKazikRewriteModal()">取消</button>
+                <button id="kazikRewriteReplaceBtn" class="rewrite-btn rewrite-btn-primary" onclick="replaceWithKazikRewriteContent()" disabled>替换内容</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI排版弹窗 -->
+    <div id="aiModal" class="ai-modal">
+        <div class="ai-modal-content">
+            <div class="ai-modal-header">
+                <span class="ai-modal-title">🤖 AI智能排版</span>
+                <button class="ai-close-btn" onclick="closeAiModal()">&times;</button>
+            </div>
+            <div id="aiError" class="ai-error" style="display: none;"></div>
+            <div id="aiContent" class="ai-content-area">
+                <div class="ai-loading ai-streaming">正在等待AI响应</div>
+            </div>
+            <div class="ai-modal-footer">
+                <button id="aiCancelBtn" class="ai-btn ai-btn-secondary" onclick="closeAiModal()">取消</button>
+                <button id="aiReplaceBtn" class="ai-btn ai-btn-primary" onclick="replaceWithAiContent()" disabled>替换内容</button>
+            </div>
+        </div>
+    </div>
+            </div>
+            <div class="status-bar" style="border-top: none; border-bottom: 1px solid #ddd;">
+                <div class="editor-stats">
+                    <span id="charCountTop">字符: 0</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="editorProgress"></div>
+                    </div>
+                </div>
+                <div class="editor-stats">
+                    <span id="wordCountTop">词: 0</span>
+                    <span id="lineCountTop">行: 1</span>
+                </div>
+            </div>
+            <textarea 
+                class="markdown-input" 
+                id="markdownInput" 
+                placeholder="在这里输入 Markdown 内容，右侧会实时显示渲染效果...&#10;&#10;支持的功能：&#10;- 标题（# ## ###）&#10;- 加粗（**文字**）&#10;- 斜体（*文字*）&#10;- 列表（- 项目）&#10;- 链接（[文字](url)）&#10;- 图片（![描述](url)）&#10;- 代码块（```代码```）&#10;- 表格等"
+            ></textarea>
+            <div class="status-bar">
+                <span id="charCount">字符数: 0</span>
+                <span id="wordCount">词数: 0</span>
+            </div>
+        </div>
+        
+        <div class="resize-handle" id="resizeHandle"></div>
+        
+        <div class="preview-panel">
+            <div class="panel-header">
+                <span>👁️ 实时预览</span>
+                <div class="toolbar">
+                    <button onclick="copyFormattedContent()">一键复制样式</button>
+                    <button onclick="copyHtml()">复制HTML</button>
+                    <button onclick="toggleFullscreen()">全屏</button>
+                </div>
+            </div>
+            <div class="status-bar" style="border-top: none; border-bottom: 1px solid #ddd;">
+                <div class="preview-stats">
+                    <span id="previewCharCount">字符: 0</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="previewProgress"></div>
+                    </div>
+                </div>
+                <div class="preview-stats">
+                    <span id="previewWordCount">词: 0</span>
+                    <span id="previewLineCount">行: 1</span>
+                </div>
+            </div>
+            <div class="markdown-preview" id="markdownPreview">
+                <div class="empty-state">
+                    <h3>🎯 开始编写 Markdown</h3>
+                    <p>在左侧输入 Markdown 内容，这里会实时显示渲染效果</p>
+                    <button class="sample-button" onclick="loadSample()">加载示例文档</button>
+                </div>
+            </div>
+            <div class="status-bar">
+                <span id="renderTime">渲染时间: 0ms</span>
+                <span id="previewStatus">就绪</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入必要的库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    
+    <script>
+        // 配置 marked
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    try {
+                        return hljs.highlight(code, { language: lang }).value;
+                    } catch (__) {}
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true,
+            gfm: true,
+            headerIds: true,
+            mangle: false,
+            pedantic: false,
+            sanitize: false,
+            smartLists: true,
+            smartypants: true,
+            xhtml: false
+        });
+
+        // 获取DOM元素
+        const markdownInput = document.getElementById('markdownInput');
+        const markdownPreview = document.getElementById('markdownPreview');
+        const charCount = document.getElementById('charCount');
+        const wordCount = document.getElementById('wordCount');
+        const renderTime = document.getElementById('renderTime');
+        const previewStatus = document.getElementById('previewStatus');
+        
+        // 顶部统计元素
+        const charCountTop = document.getElementById('charCountTop');
+        const wordCountTop = document.getElementById('wordCountTop');
+        const lineCountTop = document.getElementById('lineCountTop');
+        const editorProgress = document.getElementById('editorProgress');
+        
+        // 预览面板顶部统计元素
+        const previewCharCount = document.getElementById('previewCharCount');
+        const previewWordCount = document.getElementById('previewWordCount');
+        const previewLineCount = document.getElementById('previewLineCount');
+        const previewProgress = document.getElementById('previewProgress');
+
+        // 防抖函数
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // 更新统计信息和进度条
+        function updateStats(text) {
+            const charLength = text.length;
+            const wordLength = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const lineCount = text.split('\n').length;
+            
+            // 计算进度百分比和颜色（基于字符数，最大考虑 10000 字符）
+            const progressPercent = Math.min((charLength / 10000) * 100, 100);
+            
+            // 根据进度设置颜色
+            let progressColor = 'linear-gradient(90deg, #28a745, #20c997)';
+            if (progressPercent > 80) {
+                progressColor = 'linear-gradient(90deg, #dc3545, #fd7e14)'; // 红色到橙色
+            } else if (progressPercent > 60) {
+                progressColor = 'linear-gradient(90deg, #ffc107, #fd7e14)'; // 黄色到橙色
+            } else if (progressPercent > 30) {
+                progressColor = 'linear-gradient(90deg, #17a2b8, #28a745)'; // 蓝色到绿色
+            }
+            
+            // 更新底部状态栏
+            charCount.textContent = `字符数: ${charLength}`;
+            wordCount.textContent = `词数: ${wordLength}`;
+            
+            // 更新编辑器顶部统计
+            charCountTop.textContent = `字符: ${charLength}`;
+            wordCountTop.textContent = `词: ${wordLength}`;
+            lineCountTop.textContent = `行: ${lineCount}`;
+            editorProgress.style.width = `${progressPercent}%`;
+            editorProgress.style.background = progressColor;
+            
+            // 更新预览面板顶部统计（与编辑器同步）
+            previewCharCount.textContent = `字符: ${charLength}`;
+            previewWordCount.textContent = `词: ${wordLength}`;
+            previewLineCount.textContent = `行: ${lineCount}`;
+            previewProgress.style.width = `${progressPercent}%`;
+            previewProgress.style.background = progressColor;
+            
+            // 计算阅读时间（假设平均阅读速度为每分钟 200 词）
+            const readingTime = Math.ceil(wordLength / 200);
+            if (readingTime > 0) {
+                previewStatus.textContent = `预计阅读时间: ${readingTime} 分钟`;
+            }
+        }
+
+        // 更新预览
+        function updatePreview() {
+            const startTime = performance.now();
+            const markdownText = markdownInput.value;
+            
+            // 更新统计信息
+            updateStats(markdownText);
+            
+            if (!markdownText.trim()) {
+                markdownPreview.innerHTML = `
+                    <div class="empty-state">
+                        <h3>🎯 开始编写 Markdown</h3>
+                        <p>在左侧输入 Markdown 内容，这里会实时显示渲染效果</p>
+                        <button class="sample-button" onclick="loadSample()">加载示例文档</button>
+                    </div>
+                `;
+                renderTime.textContent = '渲染时间: 0ms';
+                previewStatus.textContent = '就绪';
+                return;
+            }
+
+            try {
+                // 将Markdown转换为HTML
+                const html = marked.parse(markdownText);
+                
+                // 使用DOMPurify清理HTML，防止XSS攻击
+                const cleanHtml = DOMPurify.sanitize(html);
+                
+                // 更新预览区域
+                markdownPreview.innerHTML = `<div class="markdown-body">${cleanHtml}</div>`;
+                
+                // 高亮代码块
+                markdownPreview.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+                
+                const endTime = performance.now();
+                renderTime.textContent = `渲染时间: ${Math.round(endTime - startTime)}ms`;
+                previewStatus.textContent = '已更新';
+                
+            } catch (error) {
+                console.error('渲染错误:', error);
+                markdownPreview.innerHTML = `
+                    <div style="color: #d73a49; padding: 16px; background-color: #ffeaea; border-radius: 6px;">
+                        <strong>渲染错误:</strong> ${error.message}
+                    </div>
+                `;
+                previewStatus.textContent = '渲染错误';
+            }
+        }
+
+        // 使用防抖优化性能
+        const debouncedUpdate = debounce(updatePreview, 300);
+
+        // 监听输入事件
+        markdownInput.addEventListener('input', debouncedUpdate);
+
+        // 监听粘贴事件
+        markdownInput.addEventListener('paste', () => {
+            setTimeout(updatePreview, 100);
+        });
+
+        // 清空编辑器
+        function clearEditor() {
+            if (confirm('确定要清空所有内容吗？')) {
+                markdownInput.value = '';
+                updatePreview();
+                markdownInput.focus();
+            }
+        }
+
+        // 加载示例
+        function loadSample() {
+            const sampleText = `# Markdown 实时渲染工具
+
+欢迎使用这个 **Markdown 实时渲染工具**！
+
+## 🎯 功能特点
+
+- **实时渲染**：输入即显示，无需手动刷新
+- **语法高亮**：支持代码块语法高亮显示
+- **统计信息**：实时显示字符数和词数
+- **响应式设计**：适配不同屏幕尺寸
+- **安全可靠**：使用 DOMPurify 防止 XSS 攻击
+
+## 📝 基础语法示例
+
+### 标题
+# 一级标题
+## 二级标题
+### 三级标题
+
+### 文本格式
+这是 **加粗文字**，这是 *斜体文字*，这是 \`行内代码\`。
+
+### 列表
+#### 无序列表
+- 项目一
+- 项目二
+  - 子项目
+  - 子项目
+
+#### 有序列表
+1. 第一步
+2. 第二步
+3. 第三步
+
+### 链接和图片
+[GitHub 官网](https://github.com)
+
+### 代码块
+\`\`\`javascript
+function hello() {
+    console.log("Hello, World!");
+}
+\`\`\`
+
+### 表格
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| 实时渲染 | ✅ | 支持 |
+| 语法高亮 | ✅ | 支持 |
+| 导出功能 | ✅ | 支持 |
+
+### 引用
+> 这是一个引用块
+> 可以包含多行内容
+
+### 分隔线
+---
+
+## 💡 使用提示
+
+1. 在左侧输入 Markdown 内容
+2. 右侧会实时显示渲染效果
+3. 支持拖拽调整左右面板大小
+4. 可以复制生成的 HTML 代码
+5. 支持下载 Markdown 文件
+
+**开始创作你的 Markdown 文档吧！** 🚀`;
+
+            markdownInput.value = sampleText;
+            updatePreview();
+            markdownInput.focus();
+        }
+
+        // 下载 Markdown 文件
+        function downloadMarkdown() {
+            const content = markdownInput.value;
+            if (!content.trim()) {
+                alert('没有内容可下载');
+                return;
+            }
+
+            const blob = new Blob([content], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '文档.md';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 复制 HTML
+        function copyHtml() {
+            const markdownText = markdownInput.value;
+            if (!markdownText.trim()) {
+                alert('没有内容可复制');
+                return;
+            }
+
+            try {
+                const html = marked.parse(markdownText);
+                const cleanHtml = DOMPurify.sanitize(html);
+                navigator.clipboard.writeText(cleanHtml).then(() => {
+                    previewStatus.textContent = 'HTML 已复制到剪贴板';
+                    setTimeout(() => {
+                        previewStatus.textContent = '就绪';
+                    }, 2000);
+                }).catch(() => {
+                    // 降级方案
+                    const textArea = document.createElement('textarea');
+                    textArea.value = cleanHtml;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    previewStatus.textContent = 'HTML 已复制到剪贴板';
+                    setTimeout(() => {
+                        previewStatus.textContent = '就绪';
+                    }, 2000);
+                });
+            } catch (error) {
+                alert('复制失败: ' + error.message);
+            }
+        }
+
+        // 一键复制样式（富文本）
+        function copyFormattedContent() {
+            const markdownText = markdownInput.value;
+            if (!markdownText.trim()) {
+                alert('没有内容可复制');
+                return;
+            }
+
+            try {
+                // 将Markdown转换为HTML
+                const htmlContent = marked.parse(markdownText);
+                
+                // 创建适合微信公众号的HTML内容，使用内联样式确保兼容性
+                let h1Counter = 0;
+                
+                // 处理HTML内容，添加微信公众号样式
+                const processedContent = htmlContent
+                    .replace(/<h1>(.*?)<\/h1>/g, (match, content) => {
+                        h1Counter++;
+                        const h1Number = h1Counter.toString().padStart(2, '0');
+                        return `<h1 style="font-size: 32px; font-weight: 700; margin: 40px 0 24px 0; padding: 16px 20px; background-color: #3f3f3f; color: white; border-radius: 12px;">${h1Number} ${content}</h1>`;
+                    })
+                    .replace(/<h2>(.*?)<\/h2>/g, '<h2 style="font-size: 24px; font-weight: 600; margin: 32px 0 20px 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px;">$1</h2>')
+                    .replace(/<h3>(.*?)<\/h3>/g, '<h3 style="font-size: 20px; font-weight: 600; margin: 24px 0 16px 0; color: #34495e;">$1</h3>')
+                    .replace(/<p>(.*?)<\/p>/g, '<p style="margin: 16px 0; text-align: justify; text-justify: inter-ideograph; font-size: 16px; line-height: 1.6; color: #3f3f3f;">$1</p>')
+                    .replace(/<strong>(.*?)<\/strong>/g, '<strong style="color: #0052ff; font-weight: 600;">$1</strong>')
+                    .replace(/<b>(.*?)<\/b>/g, '<b style="color: #0052ff; font-weight: 600;">$1</b>')
+                    .replace(/<blockquote>(.*?)<\/blockquote>/g, '<blockquote style="background-color: #f8f9fa; border-left: 4px solid #0052ff; padding: 16px 20px; margin: 20px 0; border-radius: 0 8px 8px 0; color: #495057; font-style: italic;">$1</blockquote>')
+                    .replace(/<a href="(.*?)">(.*?)<\/a>/g, '<a href="$1" style="color: #0052ff; text-decoration: none; border-bottom: 1px solid #0052ff;">$2</a>')
+                    .replace(/<code>(.*?)<\/code>/g, '<code style="background-color: #f1f3f4; color: #d63384; padding: 3px 6px; border-radius: 4px; font-size: 85%; font-family: \'SFMono-Regular\', Consolas, \'Liberation Mono\', Menlo, Courier, monospace;">$1</code>')
+                    .replace(/<pre><code>(.*?)<\/code><\/pre>/g, '<pre style="background-color: #f6f8fa; border-radius: 6px; padding: 16px; overflow-x: auto; border: 1px solid #e1e4e8;"><code style="background-color: transparent; padding: 0; color: inherit;">$1</code></pre>');
+                
+                // 创建完整的HTML文档结构
+                const fullHtmlContent = `
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <style>
+                            body { 
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+                                font-size: 16px; 
+                                line-height: 1.6; 
+                                color: #3f3f3f; 
+                                max-width: 100%; 
+                                margin: 0 auto; 
+                                padding: 20px; 
+                                background-color: white;
+                            }
+                            table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+                            th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+                            th { background-color: #f8f9fa; font-weight: 600; }
+                            ul, ol { margin: 16px 0; padding-left: 28px; }
+                            li { margin: 8px 0; line-height: 1.7; }
+                        </style>
+                    </head>
+                    <body>
+                        ${processedContent}
+                    </body>
+                    </html>
+                `;
+                
+                // 使用多种复制方法确保兼容性
+                const copyToClipboard = () => {
+                    // 方法1: 使用现代的Clipboard API
+                    if (navigator.clipboard && window.isSecureContext) {
+                        const blob = new Blob([fullHtmlContent], { type: 'text/html' });
+                        const richTextData = new ClipboardItem({ 'text/html': blob });
+                        return navigator.clipboard.write([richTextData]);
+                    }
+                    
+                    // 方法2: 使用传统的execCommand
+                    const textArea = document.createElement('textarea');
+                    textArea.value = fullHtmlContent;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    
+                    try {
+                        const successful = document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        if (successful) {
+                            return Promise.resolve();
+                        } else {
+                            return Promise.reject(new Error('复制失败'));
+                        }
+                    } catch (err) {
+                        document.body.removeChild(textArea);
+                        return Promise.reject(err);
+                    }
+                };
+                
+                // 执行复制
+                copyToClipboard().then(() => {
+                    previewStatus.textContent = '已复制到剪贴板，可直接粘贴到微信公众号';
+                    setTimeout(() => {
+                        previewStatus.textContent = '就绪';
+                    }, 3000);
+                }).catch(() => {
+                    // 最终降级方案：显示内容让用户手动复制
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = `
+                        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                                    background: white; border: 2px solid #007bff; border-radius: 8px; 
+                                    padding: 20px; max-width: 80%; max-height: 80%; overflow: auto; 
+                                    box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 10000;">
+                            <h3 style="margin-top: 0; color: #007bff;">请手动复制以下内容：</h3>
+                            <textarea readonly style="width: 100%; height: 300px; font-family: monospace; 
+                                                    font-size: 12px; border: 1px solid #ddd; 
+                                                    padding: 10px; resize: none;">${fullHtmlContent}</textarea>
+                            <button onclick="this.parentElement.parentElement.remove()" 
+                                    style="margin-top: 10px; padding: 8px 16px; background: #007bff; 
+                                           color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                关闭
+                            </button>
+                        </div>
+                    `;
+                    document.body.appendChild(tempDiv);
+                    tempDiv.querySelector('textarea').select();
+                    previewStatus.textContent = '请手动复制弹出框中的内容';
+                });
+                
+            } catch (error) {
+                alert('复制失败: ' + error.message);
+            }
+        }
+
+        // 全屏切换
+        function toggleFullscreen() {
+            const previewPanel = document.querySelector('.preview-panel');
+            if (!document.fullscreenElement) {
+                previewPanel.requestFullscreen().then(() => {
+                    previewStatus.textContent = '全屏模式';
+                }).catch(err => {
+                    alert(`无法进入全屏模式: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen().then(() => {
+                    previewStatus.textContent = '就绪';
+                });
+            }
+        }
+
+        // AI排版功能
+        let aiContent = ''; // 存储AI返回的内容
+        let aiStreaming = false; // 是否正在流式传输
+
+        // 打开AI排版弹窗
+        function aiFormat() {
+            const markdownText = markdownInput.value;
+            if (!markdownText.trim()) {
+                alert('请先输入一些内容再使用AI排版');
+                return;
+            }
+
+            // 重置状态
+            aiContent = '';
+            aiStreaming = false;
+            
+            // 显示弹窗
+            document.getElementById('aiModal').style.display = 'block';
+            document.getElementById('aiError').style.display = 'none';
+            document.getElementById('aiContent').innerHTML = '<div class="ai-loading ai-streaming">正在连接AI服务...</div>';
+            document.getElementById('aiReplaceBtn').disabled = true;
+            
+            // 调用AI API
+            callAiApi(markdownText);
+        }
+
+        // 关闭AI排版弹窗
+        function closeAiModal() {
+            document.getElementById('aiModal').style.display = 'none';
+            aiContent = '';
+            aiStreaming = false;
+        }
+
+        // 替换内容为AI返回的内容
+        function replaceWithAiContent() {
+            if (aiContent && !aiStreaming) {
+                markdownInput.value = aiContent;
+                updatePreview();
+                closeAiModal();
+                previewStatus.textContent = '已替换为AI排版内容';
+                setTimeout(() => {
+                    previewStatus.textContent = '就绪';
+                }, 2000);
+            }
+        }
+
+        // 调用AI API
+        async function callAiApi(content) {
+            const apiUrl = 'https://api.siliconflow.cn/v1/chat/completions';
+            const apiKey = 'sk-twsphqcrxicmpkggijsafqgzwscvwnjuhqzjkwqgvfhyifaf';
+            
+            // 构建请求数据
+            const requestData = {
+                "thinking_budget": 4096,
+                "top_p": 0.7,
+                "model": "deepseek-ai/DeepSeek-V3.1",
+                "messages": [
+                    {
+                        "content": "你是一位文章排版大师，请将下面的文章内容转为Markdown格式，为重要内容加粗，进行分段，每个重点段落前增加一级段落标题，标题15字以内。文章头部增加引用样式的简短分享语。【注意不要删减、修改文章内容】以下是文章内容：" + content,
+                        "role": "user"
+                    }
+                ],
+                "stream": true,
+                "max_tokens": 10000
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                }
+
+                // 开始流式读取
+                aiStreaming = true;
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                document.getElementById('aiContent').innerHTML = '';
+                document.getElementById('aiContent').className = 'ai-content-area ai-streaming';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') {
+                                aiStreaming = false;
+                                document.getElementById('aiContent').className = 'ai-content-area';
+                                document.getElementById('aiReplaceBtn').disabled = false;
+                                document.getElementById('aiReplaceBtn').textContent = '替换内容';
+                                return;
+                            }
+
+                            try {
+                                const parsed = JSON.parse(data);
+                                const content = parsed.choices?.[0]?.delta?.content;
+                                if (content) {
+                                    aiContent += content;
+                                    document.getElementById('aiContent').textContent = aiContent;
+                                    // 滚动到底部
+                                    document.getElementById('aiContent').scrollTop = document.getElementById('aiContent').scrollHeight;
+                                }
+                            } catch (e) {
+                                console.warn('解析数据失败:', e);
+                            }
+                        }
+                    }
+                }
+
+                aiStreaming = false;
+                document.getElementById('aiContent').className = 'ai-content-area';
+                document.getElementById('aiReplaceBtn').disabled = false;
+                document.getElementById('aiReplaceBtn').textContent = '替换内容';
+
+            } catch (error) {
+                console.error('AI API调用失败:', error);
+                document.getElementById('aiError').style.display = 'block';
+                document.getElementById('aiError').textContent = `AI服务调用失败: ${error.message}`;
+                document.getElementById('aiContent').innerHTML = '<div class="ai-loading">AI服务连接失败</div>';
+                document.getElementById('aiContent').className = 'ai-content-area';
+                aiStreaming = false;
+            }
+        }
+
+        // 点击弹窗外部关闭弹窗
+        window.onclick = function(event) {
+            const modal = document.getElementById('aiModal');
+            if (event.target === modal) {
+                closeAiModal();
+            }
+        }
+
+        // 监听全屏变化
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                previewStatus.textContent = '就绪';
+            }
+        });
+
+        // 拖拽调整大小
+        let isResizing = false;
+        const resizeHandle = document.getElementById('resizeHandle');
+        const editorPanel = document.querySelector('.editor-panel');
+        const previewPanel = document.querySelector('.preview-panel');
+
+        resizeHandle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            
+            const container = document.querySelector('.container');
+            const containerRect = container.getBoundingClientRect();
+            const newEditorWidth = e.clientX - containerRect.left;
+            const containerWidth = containerRect.width;
+            
+            if (newEditorWidth > 100 && newEditorWidth < containerWidth - 100) {
+                const editorPercent = (newEditorWidth / containerWidth) * 100;
+                const previewPercent = 100 - editorPercent;
+                
+                editorPanel.style.flex = `0 0 ${editorPercent}%`;
+                previewPanel.style.flex = `0 0 ${previewPercent}%`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + S 保存
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                downloadMarkdown();
+            }
+            
+            // Ctrl/Cmd + / 清空
+            if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+                e.preventDefault();
+                clearEditor();
+            }
+            
+            // Ctrl/Cmd + E 加载示例
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                loadSample();
+            }
+        });
+
+        // 页面加载完成后的初始化
+        window.addEventListener('load', () => {
+            // 自动聚焦到输入框
+            markdownInput.focus();
+            
+            // 如果有本地存储的内容，加载它
+            const savedContent = localStorage.getItem('markdownContent');
+            if (savedContent) {
+                markdownInput.value = savedContent;
+                updatePreview();
+            }
+        });
+
+        // 自动保存到本地存储
+        const saveToLocalStorage = debounce(() => {
+            localStorage.setItem('markdownContent', markdownInput.value);
+        }, 1000);
+
+        markdownInput.addEventListener('input', saveToLocalStorage);
+
+        // 页面卸载前保存
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('markdownContent', markdownInput.value);
+        });
+
+        // 防止意外关闭
+        window.addEventListener('beforeunload', (e) => {
+            if (markdownInput.value.trim() && markdownInput.value !== localStorage.getItem('markdownContent')) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        // 文章草稿改写相关变量
+        let rewriteContent = '';
+        let rewriteStreaming = false;
+
+        // 文章草稿改写（卡兹克版）相关变量
+        let kazikRewriteContent = '';
+        let kazikRewriteStreaming = false;
+
+        // 文章草稿改写功能
+        function aiRewrite() {
+            const content = markdownInput.value.trim();
+            if (!content) {
+                alert('请先输入文章内容');
+                return;
+            }
+
+            // 重置状态
+            rewriteContent = '';
+            rewriteStreaming = false;
+            
+            // 显示弹窗
+            document.getElementById('rewriteModal').style.display = 'block';
+            document.getElementById('rewriteError').style.display = 'none';
+            document.getElementById('rewriteContent').innerHTML = '<div class="rewrite-loading rewrite-streaming">正在等待AI响应</div>';
+            document.getElementById('rewriteReplaceBtn').disabled = true;
+            document.getElementById('rewriteReplaceBtn').textContent = '替换内容';
+            
+            // 调用AI API
+            callRewriteApi(content);
+        }
+
+        // 文章草稿改写（卡兹克版）功能
+        function aiRewriteKazik() {
+            const content = markdownInput.value.trim();
+            if (!content) {
+                alert('请先输入文章内容');
+                return;
+            }
+
+            // 重置状态
+            kazikRewriteContent = '';
+            kazikRewriteStreaming = false;
+            
+            // 显示弹窗
+            document.getElementById('kazikRewriteModal').style.display = 'block';
+            document.getElementById('kazikRewriteError').style.display = 'none';
+            document.getElementById('kazikRewriteContent').innerHTML = '<div class="rewrite-loading rewrite-streaming">正在等待AI响应</div>';
+            document.getElementById('kazikRewriteReplaceBtn').disabled = true;
+            document.getElementById('kazikRewriteReplaceBtn').textContent = '替换内容';
+            
+            // 调用AI API
+            callKazikRewriteApi(content);
+        }
+
+        // 关闭文章草稿改写弹窗
+        function closeRewriteModal() {
+            document.getElementById('rewriteModal').style.display = 'none';
+            if (rewriteStreaming) {
+                // 如果还在流式传输，可以在这里添加中断逻辑
+                rewriteStreaming = false;
+            }
+        }
+
+        // 关闭文章草稿改写（卡兹克版）弹窗
+        function closeKazikRewriteModal() {
+            document.getElementById('kazikRewriteModal').style.display = 'none';
+            if (kazikRewriteStreaming) {
+                // 如果还在流式传输，可以在这里添加中断逻辑
+                kazikRewriteStreaming = false;
+            }
+        }
+
+        // 替换内容
+        function replaceWithRewriteContent() {
+            if (rewriteContent) {
+                markdownInput.value = rewriteContent;
+                updatePreview();
+                closeRewriteModal();
+                
+                // 显示成功提示
+                previewStatus.textContent = '内容已替换';
+                setTimeout(() => {
+                    previewStatus.textContent = '就绪';
+                }, 2000);
+            }
+        }
+
+        // 替换卡兹克版内容
+        function replaceWithKazikRewriteContent() {
+            if (kazikRewriteContent) {
+                markdownInput.value = kazikRewriteContent;
+                updatePreview();
+                closeKazikRewriteModal();
+                
+                // 显示成功提示
+                previewStatus.textContent = '内容已替换';
+                setTimeout(() => {
+                    previewStatus.textContent = '就绪';
+                }, 2000);
+            }
+        }
+
+        // 调用文章改写API
+        async function callRewriteApi(content) {
+            const apiUrl = 'https://api.siliconflow.cn/v1/chat/completions';
+            const apiKey = 'sk-gauksdhlgfcjfeqxigdbhtkengfymtpfxpgoevuotfndzxpt';
+            
+            // 构建请求数据 - 严格按照curl命令格式
+            const requestData = {
+                "thinking_budget": 4096,
+                "top_p": 0.7,
+                "model": "deepseek-ai/DeepSeek-V3.1",
+                "stream": true,
+                "stop": [],
+                "temperature": 0.7,
+                "top_k": 50,
+                "frequency_penalty": 0.5,
+                "n": 1,
+                "messages": [
+                    {
+                        "content": "你是一位文章改写扩写大师，请将下面的文章草稿按要求改写扩写。改写扩写要求：# 吴晓波商业分析风格写作模版 # 对文章草稿内容可扩展但不能删减  ## 核心特征 - 数据驱动的叙述方式 - 历史维度的纵向对比 - 国际视野的横向比较 - 产业逻辑的深层剖析 - 商业本质的洞察  ## 文章结构  ### 1. 开篇钩子（Hook） - 用一个具体的数据或现象切入 - 设置悬念，引发思考 - 时间坐标定位  ### 2. 宏观背景（Context） - 政策环境分析 - 经济周期判断 - 行业格局变化 - 技术变革影响  ### 3. 数据支撑（Data） - 关键数据指标 - 增长曲线展示 - 市场份额变化 - 投入产出分析  ### 4. 案例剖析（Case） - 典型企业样本 - 商业模式解析 - 成功要素提炼 - 失败教训总结  ### 5. 趋势判断（Trend） - 发展周期预测 - 技术演进方向 - 市场机会识别 - 风险挑战预警  ### 6. 商业本质（Essence） - 价值创造逻辑 - 商业模型重构 - 竞争壁垒分析 - 盈利模式创新  ### 7. 结论建议（Conclusion） - 核心观点总结 - 行动策略建议 - 投资价值评估 - 未来展望  ## 语言风格 - 专业但不晦涩 - 数据化表达 - 历史纵深感 - 国际比较视野 - 商业洞察深度  ## 常用句式 - \"从数据上看...\" - \"如果我们把时间的指针拨回到...\" - \"对比国外成熟市场...\" - \"这背后反映了一个深刻的商业逻辑...\" - \"从历史周期来看...\" - \"这意味着什么？\" - \"商业的本质在于...\"。以下是文章草稿：{{文章草稿}}".replace('{{文章草稿}}', content),
+                        "role": "user"
+                    }
+                ],
+                "max_tokens": 10000
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                }
+
+                // 开始流式读取
+                rewriteStreaming = true;
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                document.getElementById('rewriteContent').innerHTML = '';
+                document.getElementById('rewriteContent').className = 'rewrite-content-area rewrite-streaming';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') {
+                                rewriteStreaming = false;
+                                document.getElementById('rewriteContent').className = 'rewrite-content-area';
+                                document.getElementById('rewriteReplaceBtn').disabled = false;
+                                document.getElementById('rewriteReplaceBtn').textContent = '替换内容';
+                                return;
+                            }
+
+                            try {
+                                const parsed = JSON.parse(data);
+                                const content = parsed.choices?.[0]?.delta?.content;
+                                if (content) {
+                                    rewriteContent += content;
+                                    document.getElementById('rewriteContent').textContent = rewriteContent;
+                                    // 滚动到底部
+                                    document.getElementById('rewriteContent').scrollTop = document.getElementById('rewriteContent').scrollHeight;
+                                }
+                            } catch (e) {
+                                console.warn('解析数据失败:', e);
+                            }
+                        }
+                    }
+                }
+
+                rewriteStreaming = false;
+                document.getElementById('rewriteContent').className = 'rewrite-content-area';
+                document.getElementById('rewriteReplaceBtn').disabled = false;
+                document.getElementById('rewriteReplaceBtn').textContent = '替换内容';
+
+            } catch (error) {
+                console.error('AI API调用失败:', error);
+                document.getElementById('rewriteError').style.display = 'block';
+                document.getElementById('rewriteError').textContent = `AI服务调用失败: ${error.message}`;
+                document.getElementById('rewriteContent').innerHTML = '<div class="rewrite-loading">AI服务连接失败</div>';
+                document.getElementById('rewriteContent').className = 'rewrite-content-area';
+                rewriteStreaming = false;
+            }
+        }
+
+        // 调用卡兹克版文章改写API
+        async function callKazikRewriteApi(content) {
+            const apiUrl = 'https://api.siliconflow.cn/v1/chat/completions';
+            const apiKey = 'sk-gauksdhlgfcjfeqxigdbhtkengfymtpfxpgoevuotfndzxpt';
+            
+            // 构建请求数据 - 使用用户提供的参数
+            const requestData = {
+                "thinking_budget": 4096,
+                "top_p": 0.7,
+                "model": "deepseek-ai/DeepSeek-V3.1",
+                "stream": true,
+                "stop": [],
+                "temperature": 0.7,
+                "top_k": 50,
+                "frequency_penalty": 0.5,
+                "n": 1,
+                "messages": [
+                    {
+                        "content": "你是一位文章改写扩写大师，请将下面的文章草稿按要求改写扩写。改写扩写要求：# 吴晓波商业分析风格写作模版 # 对文章草稿内容可扩展但不能删减  ## 核心特征 - 数据驱动的叙述方式 - 历史维度的纵向对比 - 国际视野的横向比较 - 产业逻辑的深层剖析 - 商业本质的洞察  ## 文章结构  ### 1. 开篇钩子（Hook） - 用一个具体的数据或现象切入 - 设置悬念，引发思考 - 时间坐标定位  ### 2. 宏观背景（Context） - 政策环境分析 - 经济周期判断 - 行业格局变化 - 技术变革影响  ### 3. 数据支撑（Data） - 关键数据指标 - 增长曲线展示 - 市场份额变化 - 投入产出分析  ### 4. 案例剖析（Case） - 典型企业样本 - 商业模式解析 - 成功要素提炼 - 失败教训总结  ### 5. 趋势判断（Trend） - 发展周期预测 - 技术演进方向 - 市场机会识别 - 风险挑战预警  ### 6. 商业本质（Essence） - 价值创造逻辑 - 商业模型重构 - 竞争壁垒分析 - 盈利模式创新  ### 7. 结论建议（Conclusion） - 核心观点总结 - 行动策略建议 - 投资价值评估 - 未来展望  ## 语言风格 - 专业但不晦涩 - 数据化表达 - 历史纵深感 - 国际比较视野 - 商业洞察深度  ## 常用句式 - \"从数据上看...\" - \"如果我们把时间的指针拨回到...\" - \"对比国外成熟市场...\" - \"这背后反映了一个深刻的商业逻辑...\" - \"从历史周期来看...\" - \"这意味着什么？\" - \"商业的本质在于...\"。以下是文章草稿：{{文章草稿}}".replace('{{文章草稿}}', content),
+                        "role": "user"
+                    }
+                ],
+                "max_tokens": 10000
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                }
+
+                // 开始流式读取
+                kazikRewriteStreaming = true;
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                document.getElementById('kazikRewriteContent').innerHTML = '';
+                document.getElementById('kazikRewriteContent').className = 'rewrite-content-area rewrite-streaming';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') {
+                                kazikRewriteStreaming = false;
+                                document.getElementById('kazikRewriteContent').className = 'rewrite-content-area';
+                                document.getElementById('kazikRewriteReplaceBtn').disabled = false;
+                                document.getElementById('kazikRewriteReplaceBtn').textContent = '替换内容';
+                                return;
+                            }
+
+                            try {
+                                const parsed = JSON.parse(data);
+                                const content = parsed.choices?.[0]?.delta?.content;
+                                if (content) {
+                                    kazikRewriteContent += content;
+                                    document.getElementById('kazikRewriteContent').textContent = kazikRewriteContent;
+                                    // 滚动到底部
+                                    document.getElementById('kazikRewriteContent').scrollTop = document.getElementById('kazikRewriteContent').scrollHeight;
+                                }
+                            } catch (e) {
+                                console.warn('解析数据失败:', e);
+                            }
+                        }
+                    }
+                }
+
+                kazikRewriteStreaming = false;
+                document.getElementById('kazikRewriteContent').className = 'rewrite-content-area';
+                document.getElementById('kazikRewriteReplaceBtn').disabled = false;
+                document.getElementById('kazikRewriteReplaceBtn').textContent = '替换内容';
+
+            } catch (error) {
+                console.error('AI API调用失败:', error);
+                document.getElementById('kazikRewriteError').style.display = 'block';
+                document.getElementById('kazikRewriteError').textContent = `AI服务调用失败: ${error.message}`;
+                document.getElementById('kazikRewriteContent').innerHTML = '<div class="rewrite-loading">AI服务连接失败</div>';
+                document.getElementById('kazikRewriteContent').className = 'rewrite-content-area';
+                kazikRewriteStreaming = false;
+            }
+        }
+
+        // 点击文章草稿改写弹窗外部关闭弹窗
+        window.onclick = function(event) {
+            const modal = document.getElementById('aiModal');
+            const rewriteModal = document.getElementById('rewriteModal');
+            const kazikRewriteModal = document.getElementById('kazikRewriteModal');
+            
+            if (event.target === modal) {
+                closeAiModal();
+            }
+            if (event.target === rewriteModal) {
+                closeRewriteModal();
+            }
+            if (event.target === kazikRewriteModal) {
+                closeKazikRewriteModal();
+            }
+        }
+    </script>
+</body>
+</html>

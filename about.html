@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于我 | 张老成</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .about-hero {
+            padding: calc(70px + var(--spacing-2xl)) 0 var(--spacing-2xl);
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            text-align: center;
+        }
+
+        .about-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .about-hero .subtitle {
+            font-size: 1.125rem;
+            color: var(--color-secondary);
+        }
+
+        .about-section {
+            padding: var(--spacing-2xl) 0;
+        }
+
+        .about-section:nth-child(even) {
+            background: var(--color-light);
+        }
+
+        .section-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .section-content h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            color: var(--color-primary);
+        }
+
+        .section-content p {
+            font-size: 1rem;
+            color: var(--color-secondary);
+            line-height: 1.8;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .quote-box {
+            background: var(--color-white);
+            border-left: 4px solid var(--color-accent);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin: var(--spacing-lg) 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quote-box p {
+            font-size: 1.125rem;
+            color: var(--color-primary);
+            font-style: italic;
+            margin-bottom: 0;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+        }
+
+        .value-card {
+            background: var(--color-white);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            border: 1px solid var(--color-border);
+            transition: all 0.3s ease;
+        }
+
+        .value-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .value-icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .value-card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+            color: var(--color-primary);
+        }
+
+        .value-card p {
+            font-size: 0.875rem;
+            color: var(--color-secondary);
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 768px) {
+            .about-hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .values-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="index.html">张老成</a>
+                <span class="nav-tag">跨界转型中</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="about.html" class="active">关于我</a></li>
+                <li><a href="works.html">践行收获</a></li>
+                <li><a href="thoughts.html">思考感悟</a></li>
+                <li><a href="contact.html">联系交流</a></li>
+            </ul>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 关于我 Hero -->
+    <section class="about-hero">
+        <div class="container">
+            <h1>关于我</h1>
+            <p class="subtitle">从房地产到新赛道，一个<span class="dynamic-age">47</span>岁中年人的转型之路</p>
+        </div>
+    </section>
+
+    <!-- 房地产岁月 -->
+    <section class="about-section">
+        <div class="container">
+            <div class="section-content">
+                <h2>23年房地产行业经验</h2>
+                <p>
+                    我在房地产行业深耕了23年，从基层做起，逐步成长为专业人士并步入管理岗位。
+                    这20多年里，经历比较简单：01年到07年在一家港资测量师行L&B工作，08年到13年去到VK，13年底去TC参与领导的创业，前期聚焦广州市场开发传统房地产楼盘，18年后学香港新加坡做老城区旧楼活化业务，直至24年9月离开。这20多年里，我见证了行业的起起落落，参与了众多项目的成本管控工作，
+                    积累了丰富的实战经验。
+                </p>
+                <p>
+                    成本管理是我的专业领域，从拿地可研到目标成本，从动态成本到结算复盘，
+                    从设计阶段优化到招采施工过程监控，我熟悉了完整的成本管理体系。
+                    这些经验不仅是我的专业积累，也锻炼了我系统思考和项目管理的能力。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 转折点 -->
+    <section class="about-section">
+        <div class="container">
+            <div class="section-content">
+                <h2>2024年9月：人生的转折点</h2>
+                <p>
+                    2024年9月，我离开了TC，随后做出了一个重要的决定：离开房地产行业。
+                    这个决定并不容易，毕竟我已经在这个行业投入了23年的青春和汗水。
+                </p>
+                <div class="quote-box">
+                    <p>"当时我已经45岁多了，我问自己为什么还要折腾？但我知道，如果不做出改变，我可能会被时代淘汰。"</p>
+                </div>
+                <p>
+                    离开TC后，我没有急于找新工作，而是花了3个月时间做两件事：
+                    一是系统总结过往23年的房地产经验，把经验提炼封装起来变成我日后继续走下去的工具，二是大量阅读关于房地产业务发展的书籍，特别是找到了两位做过政府高层指引过行业政策，又有学术背景在高校教学的作者，在他们的著作里我看到了国内外的发展轨迹看到了行业的周期和泡沫。
+                </p>
+                <p>
+                    这3个月的深度思考和学习，让我对房地产行业的未来有了更清晰的认识。
+                    我感觉到，房地产已经没有太大的空间。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 转型决定 -->
+    <section class="about-section">
+        <div class="container">
+            <div class="section-content">
+                <h2>45岁的转身决定</h2>
+                <p>
+                    虽然当时已经在奔五路上，但我仍决定转换赛道。
+                    很多人觉得这个年纪转型太难，但我不这么认为。
+                </p>
+                <div class="quote-box">
+                    <p>"年龄从来不是限制，心态才是。只要保持学习的热情和行动的勇气，任何时候转型都不晚。"</p>
+                </div>
+                <p>
+                    在选择新方向时，我考虑了三个标准：
+                    一是要有足够的发展空间，二是要能发挥我过往的经验和能力，
+                    三是我有兴趣并且愿意持续学习。
+                </p>
+                <p>
+                    经过调研和思考，我最终选择了三个方向进行探索：
+                    <strong>AI人工智能、低空经济、商业策划</strong>。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 一年来的探索 -->
+    <section class="about-section">
+        <div class="container">
+            <div class="section-content">
+                <h2>一年来的探索与实践</h2>
+                <p>
+                    从决定转型到现在，已经一年多时间了。这一年里，
+                    我边学边做，在三个方向都有了些积累。
+                </p>
+                <p>
+                    在<strong>AI方向</strong>，我自学了人工智能理论和AI工具使用，做了一些AI产品策划和智能体打造，
+                    获得了一些证书，尝试了AI图文视频创作，
+                    持续追踪AI的发展。
+                </p>
+                <p>
+                    在<strong>低空经济方向</strong>，我深入了解无人机应用场景，
+                    参与了HT公司的业务摸索与实践，策划了建筑外立面巡检方案、
+                    无人机高空清洗解决方案，还参与了城市低空物流运营的思考。
+                </p>
+                <p>
+                    在<strong>商业策划方向</strong>，我参与了多个项目的策划工作，
+                    包括校企合作的研学策划、地质基地研学可行性报告、
+                    商业大厦广场外摆空间的招商方案等，将过往的经验应用到新的领域。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 我的价值 -->
+    <section class="about-section">
+        <div class="container">
+            <div class="section-content">
+                <h2>我能带来什么价值</h2>
+                <p>
+                    通过这一年的探索，我逐渐清晰了自己的定位和优势：
+                </p>
+                <div class="values-grid">
+                    <div class="value-card">
+                        <div class="value-icon">🎯</div>
+                        <h3>跨界视角</h3>
+                        <p>房地产+AI+低空+商业，多领域融合思考</p>
+                    </div>
+                    <div class="value-card">
+                        <div class="value-icon">📋</div>
+                        <h3>策划能力</h3>
+                        <p>从0到1的方案策划和项目落地经验</p>
+                    </div>
+                    <div class="value-card">
+                        <div class="value-icon">🔧</div>
+                        <h3>执行力</h3>
+                        <p>边学边做，快速将想法转化为成果</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 未来展望 -->
+    <section class="about-section">
+        <div class="container">
+            <div class="section-content">
+                <h2>未来的方向</h2>
+                <p>
+                    转型之路才刚刚开始。未来，我会在三个方向继续深耕：
+                </p>
+                <ul style="list-style: none; padding-left: 0;">
+                    <li style="padding: 0.75rem 0; border-bottom: 1px solid var(--color-border);">
+                        <strong>AI方向：</strong>继续探索AI在各行业的落地应用，特别是与房地产、低空经济的结合
+                    </li>
+                    <li style="padding: 0.75rem 0; border-bottom: 1px solid var(--color-border);">
+                        <strong>低空经济：</strong>关注无人机在建筑、物流等领域的商业化应用
+                    </li>
+                    <li style="padding: 0.75rem 0;">
+                        <strong>商业策划：</strong>将过往的经验和新的认知结合，为项目提供更有价值的策划方案
+                    </li>
+                </ul>
+                <p style="margin-top: var(--spacing-lg);">
+                    这个网站是我转型路上的一个里程碑，记录着我的思考和成果。
+                    如果你对这些方向感兴趣，或者你也在思考转型，欢迎与我交流！
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h4>张老成</h4>
+                    <p>用行动诠释中年转型的可能性</p>
+                </div>
+                <div class="footer-nav">
+                    <a href="index.html">首页</a>
+                    <a href="about.html">关于我</a>
+                    <a href="works.html">践行收获</a>
+                    <a href="thoughts.html">思考感悟</a>
+                    <a href="contact.html">联系交流</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span class="current-year">2025</span> 张老成. 记录跨界转型之路</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
